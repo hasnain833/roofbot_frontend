@@ -88,7 +88,7 @@ export default function CheckoutPageContent() {
     try {
       const plan = user?.last_plan_id ?? 1;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/subscribe`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/checkout`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
