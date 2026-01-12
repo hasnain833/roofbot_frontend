@@ -1,0 +1,64 @@
+[33m377a96f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m profile page bug update
+[33m96aad40[m "
+[33ma940f24[m 3 dec update
+[33m3436d55[m Updated
+[33ma1464b1[m Fix section numbering and headings and demo videos added in ONBOARDING.md
+[33m4c6e8b1[m Revise onboarding guide for improved clarity
+[33ma75b15c[m Enhance onboarding details for SMS features
+[33m1fe23c8[m Added onboarding guide for Roofbot CRM users
+[33mf7e8150[m Revise README
+[33m1236452[m Update README with project structure and installation steps
+[33m23f5618[m Enhance README with detailed documentation
+[33mec8b3c4[m small update
+[33m9e481b9[m 29 nov updated
+[33m3edff88[m 29 Nov
+[33m1518e6c[m 27 nov update
+[33m6f797f4[m 26 nov update
+[33mbd64226[m webhook link updated in chatbot
+[33ma9c4035[m !5 nov bugs fixed
+[33m1a9fd4f[m !4 Nov bugs fixed chatbot appears even after reload appointments converted just for superadmin now
+[33mea1ef88[m chatbot with openAi key and sessionid
+[33m7518f91[m 13 nov
+[33m257136d[m 12 nov
+[33m3b6a892[m fixing issues
+[33mf5ff0f1[m fixing build errors for vercel
+[33m86e6e1a[m fixing build errors for vercel
+[33m5db9372[m fix build errors for vercel
+[33mb649798[m 6 Nov
+[33mcfcec8a[m 1 nov
+[33m79ee6f2[m fix
+[33md6368ce[m fix
+[33mb919cdf[m fixing error
+[33m95c2176[m fixing error
+[33mf3e7f07[m fixing error
+[33m7866946[m latest
+[33m22044aa[m 30 oct
+[33mb008b86[m resolved env conflict
+[33m730e4a1[m[33m ([m[1;32mdev-Taha[m[33m)[m 30 oct
+[33m5d4e68c[m merged
+[33m4784166[m 24 OCT Update
+[33m6d1c823[m 22 OCT Update
+[33me745192[m 22 OCT Update
+[33mb4d5d47[m Stop tracking .env files
+[33m9a73618[m 17 oct changes
+[33m738c80f[m 17 oct update
+[33m067be01[m[33m ([m[1;32mdev-Taha2[m[33m)[m 16 oct update
+[33ma215c42[m Typescript fixes
+[33maeff746[m chat working and apointments are just booking for now
+[33mdfc1222[m conflicts fixes
+[33me730986[m Remove merge conflicts
+[33m38f6788[m Remove merge conflict marker from sidebar
+[33md19e951[m Unrelated histories merge conflicts
+[33m16851ee[m Twillio button ui fix
+[33m3b5c07e[m[33m ([m[1;32mleads-update[m[33m)[m 14 oct update
+[33m8d1786b[m[33m ([m[1;32mnow[m[33m)[m leads page
+[33m52b1d4d[m updated user edit form
+[33mb731f23[m[33m ([m[1;32mnewupdate[m[33m)[m Update oct-13
+[33m08f9580[m Update Oct 9
+[33mf6b742d[m[33m ([m[1;32mdev-ghulam2[m[33m)[m Updated today
+[33m09e0265[m Update Oct 8
+[33m2eb55aa[m[33m ([m[1;32mupdated-frontend[m[33m)[m Frontend code with updates
+[33m4d3593f[m Merge branch 'main' of github.com:griffinbuehler/roofbot-frontend
+[33m1d1f841[m Initialize
+[33mc9ced60[m Initialize
+[33m0ff2065[m Initial commit
