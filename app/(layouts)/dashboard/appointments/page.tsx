@@ -10,11 +10,21 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { LoaderCircle, Trash2, Pencil } from 'lucide-react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
+import { Calendar, momentLocalizer, View } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
@@ -32,6 +42,8 @@ export default function AppointmentsPage() {
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [converting, setConverting] = useState(false);
+  const [deleteItem, setDeleteItem] = useState<any>(null);
+  const [convertItem, setConvertItem] = useState<any>(null);
 
 
   const [form, setForm] = useState({
@@ -49,7 +61,7 @@ export default function AppointmentsPage() {
   const [loadingLeads, setLoadingLeads] = useState(false);
   const [serviceTypes, setServiceTypes] = useState<any[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week' | 'day' | 'agenda'>('month');
+  const [view, setView] = useState<View>('month');
 
   const serviceTypeColors: Record<string, string> = {
     'Roof Inspection': 'bg-blue-100 text-blue-700',
@@ -98,7 +110,7 @@ export default function AppointmentsPage() {
     }
   };
 
- const loadAllEvents = async () => {
+  const loadAllEvents = async () => {
     if (!token) return;
     setLoading(true);
 
@@ -133,7 +145,7 @@ export default function AppointmentsPage() {
   useEffect(() => {
     loadAllEvents();
   }, [token]);
-  
+
   // Fetch service types
   useEffect(() => {
     if (!token) return;
@@ -208,10 +220,10 @@ export default function AppointmentsPage() {
     e.preventDefault();
     if (!token) return;
 
-   if (!form.service_type) {
-  setError('Please select a valid service type.');
-  return;
-}
+    if (!form.service_type) {
+      setError('Please select a valid service type.');
+      return;
+    }
 
     setSaving(true);
     setError('');
@@ -225,7 +237,7 @@ export default function AppointmentsPage() {
         service_type: form.service_type,
       };
 
-      let res, data;
+      let res: Response, data: any;
       if (editingAppointment) {
         // Update internal
         res = await fetch(`${API_URL}/api/appointments/${editingAppointment.id}`, {
@@ -240,7 +252,7 @@ export default function AppointmentsPage() {
         data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Failed to update appointment');
         setAppointments((prev) =>
-          prev.map((a) => (a.id === data.data.id ? data.data : a))
+          prev.map((a) => (a.id === data.data.id ? { ...data.data, source: 'internal' } : a))
         );
         setSuccess('Appointment updated successfully');
       } else {
@@ -257,14 +269,14 @@ export default function AppointmentsPage() {
         data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Failed to create appointment');
         setAppointments((prev) => [
-  {
-    ...data.data,
-    start: new Date(data.data.start_time),
-    end: new Date(data.data.end_time),
-    source: 'internal',   // ← CRITICAL FIX
-  },
-  ...prev
-]);
+          {
+            ...data.data,
+            start: new Date(data.data.start_time),
+            end: new Date(data.data.end_time),
+            source: 'internal',   // ← CRITICAL FIX
+          },
+          ...prev
+        ]);
 
         setSuccess('Appointment created successfully');
 
@@ -301,7 +313,6 @@ export default function AppointmentsPage() {
 
   const handleDelete = async (appointment: any) => {
     if (!token) return;
-    if (!confirm('Are you sure you want to delete this appointment?')) return;
 
     try {
       const res = await fetch(`${API_URL}/api/appointments/${appointment.id}`, {
@@ -320,15 +331,15 @@ export default function AppointmentsPage() {
   };
   const handleConvertToJob = async (appointment: any) => {
     if (!token) return;
-    if (!confirm('Convert this appointment to a job?')) return;
 
     setConverting(true);
     try {
       const res = await fetch(`${API_URL}/api/appointments/${appointment.id}/convert-to-job`, {
         method: 'POST',
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
-           Accept: 'application/json' },
+          Accept: 'application/json'
+        },
       });
 
       const data = await res.json();
@@ -341,11 +352,11 @@ export default function AppointmentsPage() {
         )
       );
 
-      alert('Converted to job successfully!');
+      setSuccess('Converted to job successfully!');
       setShowConvertModal(false);
-      await loadAllEvents(); 
+      await loadAllEvents();
     } catch (err: any) {
-      alert(`Failed: ${err.message}`);
+      setError(`Failed: ${err.message}`);
     } finally {
       setConverting(false);
     }
@@ -364,24 +375,25 @@ export default function AppointmentsPage() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Appointments Calendar</h2>
         <div className='flex gap-2'>
-        <Button onClick={() => { setShowModal(true); setEditingAppointment(null); }}>
-          Add Appointment
-        </Button>
-         <Button
-      variant="outline"
-      onClick={() => setShowConvertModal(true)}
-    >
-      Convert to Job
-    </Button>
-    </div>
+          <Button onClick={() => { setShowModal(true); setEditingAppointment(null); }}>
+            Add Appointment
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowConvertModal(true)}
+          >
+            Convert to Job
+          </Button>
+        </div>
       </div>
-      
+
 
       {success && <p className="text-green-600">{success}</p>}
 
       {loading ? (
-        <div className="flex items-center gap-2 text-gray-500">
-          <LoaderCircle className="animate-spin" size={20} /> Loading appointments...
+        <div className="flex flex-col items-center justify-center min-h-[400px] w-full gap-4">
+          <LoaderCircle className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-muted-foreground font-medium animate-pulse">Loading appointments...</p>
         </div>
       ) : (
         <div className="bg-background p-5 rounded-lg shadow-sm">
@@ -414,18 +426,18 @@ export default function AppointmentsPage() {
                       )}
                     </div>
                     {event.source !== 'google' && (
-                     <div className="flex gap-1 ml-2">
-            <Pencil
-              className="cursor-pointer text-blue-600"
-              size={16}
-              onClick={() => handleEdit(event)}
-            />
-            <Trash2
-              className="cursor-pointer text-red-600"
-              size={16}
-              onClick={() => handleDelete(event)}
-            />
-          </div>
+                      <div className="flex gap-1 ml-2">
+                        <Pencil
+                          className="cursor-pointer text-blue-600"
+                          size={16}
+                          onClick={() => handleEdit(event)}
+                        />
+                        <Trash2
+                          className="cursor-pointer text-red-600"
+                          size={16}
+                          onClick={() => setDeleteItem(event)}
+                        />
+                      </div>
                     )}
                   </div>
                 );
@@ -439,6 +451,7 @@ export default function AppointmentsPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Convert Appointment to Job</DialogTitle>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </DialogHeader>
           <div className="space-y-2 max-h-80 overflow-auto mt-2">
             {appointments
@@ -461,7 +474,7 @@ export default function AppointmentsPage() {
                     size="sm"
                     variant={a.status === 'Converted to Job' ? 'secondary' : 'outline'}
                     disabled={converting || a.status === 'Converted to Job'}
-                    onClick={() => handleConvertToJob(a)}
+                    onClick={() => setConvertItem(a)}
                   >
                     {a.status === 'Converted to Job' ? 'Converted' : 'Convert'}
                   </Button>
@@ -571,6 +584,57 @@ export default function AppointmentsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this appointment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteItem) {
+                  handleDelete(deleteItem);
+                  setDeleteItem(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Convert Confirmation Dialog */}
+      <AlertDialog open={!!convertItem} onOpenChange={() => setConvertItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Convert to Job</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to convert this appointment to a job?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (convertItem) {
+                  handleConvertToJob(convertItem);
+                  setConvertItem(null);
+                }
+              }}
+            >
+              Convert
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

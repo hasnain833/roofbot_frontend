@@ -2,9 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { LoaderCircleIcon } from 'lucide-react';
+import { LoaderCircleIcon, Info } from 'lucide-react';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export default function IntegrationPage() {
   const { token } = useAuth();
@@ -28,6 +43,9 @@ export default function IntegrationPage() {
   const [showSendgridFields, setShowSendgridFields] = useState(false);
   const [isProcessingSendgrid, setIsProcessingSendgrid] = useState(false);
   const [integrations, setIntegrations] = useState<any[]>([]);
+  const [disconnectProvider, setDisconnectProvider] = useState<string | null>(
+    null,
+  );
 
   const redirectUri = process.env.NEXT_PUBLIC_OUTLOOK_REDIRECT_URI;
   if (!redirectUri) {
@@ -130,15 +148,15 @@ export default function IntegrationPage() {
           );
 
           setSuccess('Outlook Calendar connected!');
-          params.delete('outlook_code');
+          params.delete('code');
+          params.delete('state');
         }
 
         window.history.replaceState(
           {},
           '',
-          `${window.location.pathname}?${params.toString()}`,
+          `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`,
         );
-
         await fetchIntegrations(token);
       } catch {
         setError('Integration failed');
@@ -152,8 +170,6 @@ export default function IntegrationPage() {
   }, [token]);
 
   const disconnectIntegration = async (provider: string) => {
-    if (!confirm(`Are you sure you want to disconnect ${provider}?`)) return;
-
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/tenant/integration/disconnect`,
@@ -207,7 +223,7 @@ export default function IntegrationPage() {
 
                 <Button
                   variant="destructive"
-                  onClick={() => disconnectIntegration('google')}
+                  onClick={() => setDisconnectProvider('google')}
                 >
                   Disconnect
                 </Button>
@@ -236,8 +252,63 @@ export default function IntegrationPage() {
         </div>
 
         {/* Twilio */}
-        <div className="p-4 border rounded-lg shadow-sm bg-background">
-          <h2 className="font-semibold mb-3">Twilio</h2>
+        <div className="p-4 border rounded-lg shadow-sm bg-background relative">
+          <div className="flex justify-between items-start mb-3">
+            <h2 className="font-semibold">Twilio</h2>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="right"
+                className="max-w-xs max-h-80 overflow-y-auto"
+              >
+                <div className="p-1 text-xs">
+                  <p className="font-semibold text-blue-700 mb-2">
+                    📌 Twilio Webhook Setup (Messages)
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 mb-3">
+                    <li>Create Messaging Service</li>
+                    <li>Add Twilio number to Sender Pool</li>
+                    <li>Select "send a webhook"</li>
+                    <li>
+                      Request URL:{' '}
+                      <code className="text-[10px] break-all">
+                        {process.env.NEXT_PUBLIC_API_URL}/api/twilio/inbound
+                      </code>
+                    </li>
+                    <li>
+                      Status callback:{' '}
+                      <code className="text-[10px] break-all">
+                        {process.env.NEXT_PUBLIC_API_URL}/api/twilio/status
+                      </code>
+                    </li>
+                  </ol>
+                  <p className="font-semibold text-blue-700 mb-2">
+                    📌 Twilio Webhook Setup (Calls)
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Go to Active Number section</li>
+                    <li>Voice Configuration → Webhook</li>
+                    <li>
+                      A Call Comes In:{' '}
+                      <code className="text-[10px] break-all">
+                        {process.env.NEXT_PUBLIC_API_URL}/api/twilio/voice/inbound
+                      </code>
+                    </li>
+                    <li>
+                      Status changes:{' '}
+                      <code className="text-[10px] break-all">
+                        {process.env.NEXT_PUBLIC_API_URL}/api/twilio/voice/status
+                      </code>
+                    </li>
+                  </ol>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           {twilioConnected ? (
             <div className="flex flex-col gap-3">
               <p className="text-green-600 font-medium">Connected to Twilio</p>
@@ -248,91 +319,10 @@ export default function IntegrationPage() {
 
                 <Button
                   variant="destructive"
-                  onClick={() => disconnectIntegration('twilio')}
+                  onClick={() => setDisconnectProvider('twilio')}
                 >
                   Disconnect
                 </Button>
-              </div>
-              {/* Twilio Webhook Instructions */}
-              <div className="mt-4 p-3 border-l-4 border-blue-400 bg-blue-50 rounded-md text-sm max-h-48 overflow-y-auto">
-                <p className="font-semibold text-blue-700">
-                  📌 Twilio Webhook Setup Instructions for incoming messages
-                </p>
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>
-                    Create a <strong>Messaging Service</strong> in your Twilio
-                    account:
-                    <br />
-                    <span className="text-gray-600">
-                      Messaging → Services → Create Messaging Service
-                    </span>
-                  </li>
-                  <li>
-                    Add your Twilio phone number(s) in sender pool of the
-                    Messaging Service:
-                    <br />
-                    <span className="text-gray-600">
-                      Messaging Service → Sender pool → Add your Twilio number
-                    </span>
-                  </li>
-                  <li>go to integration tab select "send a webhook" </li>
-                  <li>
-                    Set the <strong>Request URL</strong> to:
-                    <br />
-                    <span className="text-gray-600 font-mono">{`${process.env.NEXT_PUBLIC_API_URL}/api/twilio/\ninbound`}</span>
-                  </li>
-                  <li>
-                    Set the <strong>Delivery status callback URL</strong> to:
-                    <br />
-                    <span className="text-gray-600 font-mono">{`${process.env.NEXT_PUBLIC_API_URL}/api/twilio/\nstatus`}</span>
-                  </li>
-                  <li>Save your changes.</li>
-                  <li>
-                    <span className="text-red-600 font-semibold">Note:</span>{' '}
-                    This ensures recieving messages from lead and also let you
-                    see the status(sent,failed,queued etc) .
-                  </li>
-                </ol>
-                <p className="font-semibold text-blue-700">
-                  📌 Twilio Webhook Setup Instructions for incoming Calls
-                </p>
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>
-                    go to your <strong>Phone Number's,</strong>{' '}
-                    <strong>Active Number</strong> section in your Twilio
-                    account:
-                    <br />
-                    <span className="text-gray-600">
-                      Click your number which you also added in messaging
-                      service sender pool.
-                    </span>
-                  </li>
-                  <li>
-                    You will see a voice configuration setting.
-                    <br />
-                    <span className="text-gray-600">
-                      Configure with Webhook, TwiML Bin, Function, Studio Flow,
-                      Proxy Service
-                    </span>
-                  </li>
-                  <li>
-                    Set the Url of <strong>A call Comes In</strong> to{' '}
-                    <span className="text-gray-600 font-mono">{`${process.env.NEXT_PUBLIC_API_URL}api/twilio/\nvoice/inbound`}</span>
-                  </li>
-                  <li>
-                    Also set HTTP to <strong>HTTP POST</strong>
-                  </li>
-                  <li>
-                    Set the Url of <strong>Call status changes</strong> to:
-                    <br />
-                    <span className="text-gray-600 font-mono">{`${process.env.NEXT_PUBLIC_API_URL}/api/twilio/\nvoice/status`}</span>
-                  </li>
-                  <li>Go Down and Save your changes.</li>
-                  <li>
-                    <span className="text-red-600 font-semibold">Note:</span>{' '}
-                    This ensures recieving calls from lead.
-                  </li>
-                </ol>
               </div>
             </div>
           ) : (
@@ -444,7 +434,7 @@ export default function IntegrationPage() {
 
                 <Button
                   variant="destructive"
-                  onClick={() => disconnectIntegration('openai')}
+                  onClick={() => setDisconnectProvider('openai')}
                 >
                   Disconnect
                 </Button>
@@ -534,7 +524,7 @@ export default function IntegrationPage() {
             </>
           )}
         </div>
-    
+
         {/* SendGrid Email */}
         <div className="p-4 border rounded-lg shadow-sm bg-background">
           <h2 className="font-semibold mb-3">SendGrid (Email)</h2>
@@ -558,7 +548,7 @@ export default function IntegrationPage() {
 
                 <Button
                   variant="destructive"
-                  onClick={() => disconnectIntegration('sendgrid')}
+                  onClick={() => setDisconnectProvider('sendgrid')}
                 >
                   Disconnect
                 </Button>
@@ -684,7 +674,7 @@ export default function IntegrationPage() {
 
               <Button
                 variant="destructive"
-                onClick={() => disconnectIntegration('outlook')}
+                onClick={() => setDisconnectProvider('outlook')}
               >
                 Disconnect
               </Button>
@@ -710,6 +700,36 @@ export default function IntegrationPage() {
           )}
         </div>
       </div>
-    </div>
+
+      <AlertDialog
+        open={!!disconnectProvider}
+        onOpenChange={() => setDisconnectProvider(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will disconnect the <strong>{disconnectProvider}</strong>{' '}
+              integration. You will need to reconnect it manually if you change
+              your mind.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (disconnectProvider) {
+                  disconnectIntegration(disconnectProvider);
+                  setDisconnectProvider(null);
+                }
+              }}
+            >
+              Disconnect
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div >
   );
 }

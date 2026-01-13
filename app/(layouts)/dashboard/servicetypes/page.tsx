@@ -6,6 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Pencil, Trash2, PlusCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -27,6 +37,9 @@ export default function ServiceTypesPage() {
   const [view, setView] = useState<"table" | "form">("table");
   const [isEditing, setIsEditing] = useState(false);
   const [selectedType, setSelectedType] = useState<ServiceType | null>(null);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [typeToDelete, setTypeToDelete] = useState<ServiceType | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -121,13 +134,18 @@ export default function ServiceTypesPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Delete this service type?")) return;
+  const handleDelete = (type: ServiceType) => {
+    setTypeToDelete(type);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!typeToDelete || !token) return;
     setIsProcessing(true);
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/service-types/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/service-types/${typeToDelete.id}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
@@ -143,6 +161,8 @@ export default function ServiceTypesPage() {
       setError(err.message);
     } finally {
       setIsProcessing(false);
+      setDeleteDialogOpen(false);
+      setTypeToDelete(null);
     }
   };
 
@@ -214,7 +234,7 @@ export default function ServiceTypesPage() {
                       <Button size="sm" variant="secondary" onClick={() => handleEdit(type)}>
                         <Pencil size={14} />
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(type.id)}>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(type)}>
                         <Trash2 size={14} />
                       </Button>
                     </div>
@@ -263,6 +283,28 @@ export default function ServiceTypesPage() {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this service type?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{typeToDelete?.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isProcessing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isProcessing && <Loader2 className="animate-spin size-4 mr-1" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

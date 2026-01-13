@@ -8,8 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 type Props = {
   companyName?: string;
-  botToken?: string;    
-  isPublic?: boolean;     
+  botToken?: string;
+  isPublic?: boolean;
 };
 
 export default function ChatbotWidget({ companyName, botToken }: Props) {
@@ -51,12 +51,18 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
 
   useEffect(() => {
     const fetchSession = async () => {
+      // Don't fetch if we're in the dashboard and token isn't ready yet
+      if (!isIframe && !token) return;
+
       try {
         const res = await fetch(fetchSessionUrl, {
           headers: isIframe ? {} : { Authorization: `Bearer ${token}`, Accept: "application/json" },
         });
 
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.error("Session info fetch failed:", res.status);
+          return;
+        }
 
         const data = await res.json();
         setAgentId(data.agent_id);
@@ -75,7 +81,7 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
     };
 
     fetchSession();
-  }, []);
+  }, [token, isIframe, fetchSessionUrl]);
 
   const sendMessageUrl = isIframe
     ? `${process.env.NEXT_PUBLIC_API_URL}/api/chatbot/message-public`
@@ -88,6 +94,16 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
     setMessages((prev) => [...prev, newMessage]);
     setInput("");
     setLoading(true);
+
+    if (!agentId || !sessionId) {
+      console.warn("Cannot send message: agentId or sessionId missing.");
+      setMessages((prev) => [
+        ...prev,
+        { sender: "bot", text: "Chatbot is still initializing. Please wait a moment... 🤖" },
+      ]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch(sendMessageUrl, {
@@ -108,7 +124,7 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
       const data = await res.json();
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: data.reply || "No response received 🤖" },
+        { sender: "bot", text: data.reply || data.message || data.error || "No response received 🤖" },
       ]);
     } catch (err) {
       console.error(err);
@@ -132,11 +148,10 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`px-4 py-2 rounded-2xl text-sm shadow ${
-                  msg.sender === "user"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
+                className={`px-4 py-2 rounded-2xl text-sm shadow ${msg.sender === "user"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-800"
+                  }`}
               >
                 {msg.text}
               </div>

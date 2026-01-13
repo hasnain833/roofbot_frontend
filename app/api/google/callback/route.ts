@@ -20,20 +20,20 @@ export async function GET(req: Request) {
       body: JSON.stringify({
         provider: "google",
         key: code,
-        secret: "", 
+        secret: "",
       }),
     });
-console.log("CODE RECEIVED:", code);
-console.log("Laravel response status:", res.status);
+    console.log("CODE RECEIVED:", code);
+    console.log("Laravel response status:", res.status);
 
     if (!res.ok) {
       console.error("Failed to store code:", await res.text());
-      return NextResponse.redirect("https://crm.invictusconnect.com/dashboard/integrations?error=store_failed");
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/integrations?error=store_failed`);
     }
 
-    return NextResponse.redirect("https://crm.invictusconnect.com/dashboard/integrations?connected=google");
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/integrations?connected=google`);
   } catch (err) {
     console.error("Callback error:", err);
-    return NextResponse.redirect("https://crm.invictusconnect.com/dashboard/integrations?error=callback");
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/integrations?error=callback`);
   }
 }

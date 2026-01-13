@@ -20,6 +20,16 @@ import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChatSheet } from '@/components/layouts/layout-1/shared/topbar/chatsheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function LeadsPage() {
   const { token } = useAuth();
@@ -31,8 +41,8 @@ export default function LeadsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-const [customAnswers, setCustomAnswers] = useState<any[]>([]);
-const [answersLoading, setAnswersLoading] = useState(false);
+  const [customAnswers, setCustomAnswers] = useState<any[]>([]);
+  const [answersLoading, setAnswersLoading] = useState(false);
 
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -57,6 +67,7 @@ const [answersLoading, setAnswersLoading] = useState(false);
   // ✅ For AI Summary
   const [summary, setSummary] = useState<string>('');
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [deleteItem, setDeleteItem] = useState<number | null>(null);
 
   const fetchLeads = async () => {
     if (!token) return;
@@ -126,25 +137,25 @@ const [answersLoading, setAnswersLoading] = useState(false);
     }
   };
   const fetchLeadAnswers = async (leadId: number) => {
-  if (!token) return;
+    if (!token) return;
 
-  setAnswersLoading(true);
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/leads/${leadId}/custom-answers`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    setAnswersLoading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/leads/${leadId}/custom-answers`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    const data = await res.json();
-    setCustomAnswers(data.data || []);
-  } catch {
-    setCustomAnswers([]);
-  } finally {
-    setAnswersLoading(false);
-  }
-};
+      const data = await res.json();
+      setCustomAnswers(data.data || []);
+    } catch {
+      setCustomAnswers([]);
+    } finally {
+      setAnswersLoading(false);
+    }
+  };
 
 
   const handleUpdateLead = async () => {
@@ -176,7 +187,6 @@ const [answersLoading, setAnswersLoading] = useState(false);
   };
 
   const handleDeleteLead = async (id: number) => {
-    if (!confirm('Are you sure?')) return;
     setIsProcessing(true);
     try {
       const res = await fetch(
@@ -297,7 +307,7 @@ const [answersLoading, setAnswersLoading] = useState(false);
         );
         const data = await res.json();
         setServiceTypes(data.data || []);
-      } catch {}
+      } catch { }
     };
     fetchServiceTypes();
   }, [token]);
@@ -406,7 +416,7 @@ const [answersLoading, setAnswersLoading] = useState(false);
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleDeleteLead(lead.id)}
+                          onClick={() => setDeleteItem(lead.id)}
                           disabled={isProcessing}
                         >
                           <Trash2 size={14} />
@@ -636,42 +646,68 @@ const [answersLoading, setAnswersLoading] = useState(false);
                   </CardContent>
                 </Card>
               )}
-           
-            </div>
-               {isEditing && (
-  <Card className="border shadow-md mt-4">
-    <CardHeader>
-      <CardTitle>Custom Questions</CardTitle>
-    </CardHeader>
 
-    <CardContent>
-      {answersLoading ? (
-        <p className=" italic">Loading answers...</p>
-      ) : customAnswers.length === 0 ? (
-        <p className=" italic">
-          No custom answers for this lead
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {customAnswers.map((a) => (
-            <div key={a.id} className="border rounded p-3">
-              <p className="font-medium text-sm">
-                {a.question}
-              </p>
-              <p className="text-sm  mt-1">
-                {a.answer || '-'}
-              </p>
             </div>
-          ))}
-        </div>
-      )}
-    </CardContent>
-  </Card>
-)}
+            {isEditing && (
+              <Card className="border shadow-md mt-4">
+                <CardHeader>
+                  <CardTitle>Custom Questions</CardTitle>
+                </CardHeader>
+
+                <CardContent>
+                  {answersLoading ? (
+                    <p className=" italic">Loading answers...</p>
+                  ) : customAnswers.length === 0 ? (
+                    <p className=" italic">
+                      No custom answers for this lead
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {customAnswers.map((a) => (
+                        <div key={a.id} className="border rounded p-3">
+                          <p className="font-medium text-sm">
+                            {a.question}
+                          </p>
+                          <p className="text-sm  mt-1">
+                            {a.answer || '-'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
           </CardContent>
         </Card>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lead</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this lead? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteItem) {
+                  handleDeleteLead(deleteItem);
+                  setDeleteItem(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

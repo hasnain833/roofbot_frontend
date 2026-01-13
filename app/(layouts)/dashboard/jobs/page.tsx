@@ -4,6 +4,16 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash, Loader2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function JobsPage() {
   const { token } = useAuth();
@@ -15,15 +25,16 @@ export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  
-    const [page, setPage] = useState(1);
-    const [pageSize] = useState(10);
-    const [total, setTotal] = useState(0);
+
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const perPage = 10;
 
   const [editingJob, setEditingJob] = useState<any | null>(null);
+  const [deleteJobId, setDeleteJobId] = useState<number | null>(null);
 
   // ✅ Reusable fetch function
   const fetchJobs = async () => {
@@ -50,7 +61,6 @@ export default function JobsPage() {
 
   // ✅ Delete job
   const deleteJob = async (id: number) => {
-    if (!confirm("Delete this job?")) return;
     setIsProcessing(true);
     try {
       const res = await fetch(`${API_URL}/api/jobs/${id}`, {
@@ -110,8 +120,15 @@ export default function JobsPage() {
       setIsProcessing(false);
     }
   };
-const totalPages = Math.ceil(total / pageSize);
-  if (loading) return <p>Loading jobs...</p>;
+  const totalPages = Math.ceil(total / pageSize);
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] w-full gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-muted-foreground font-medium animate-pulse">Loading jobs...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -169,7 +186,7 @@ const totalPages = Math.ceil(total / pageSize);
                   <Button size="sm" onClick={() => setEditingJob(job)} disabled={isProcessing}>
                     {isProcessing ? <Loader2 className="animate-spin w-4 h-4" /> : <Pencil size={14} />}
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => deleteJob(job.id)} disabled={isProcessing}>
+                  <Button size="sm" variant="destructive" onClick={() => setDeleteJobId(job.id)} disabled={isProcessing}>
                     {isProcessing ? <Loader2 className="animate-spin w-4 h-4" /> : <Trash size={14} />}
                   </Button>
                 </td>
@@ -180,23 +197,23 @@ const totalPages = Math.ceil(total / pageSize);
       </table>
 
       {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
-            <span className="text-sm ">Page {page} of {totalPages || 1}</span>
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(p - 1, 1))} disabled={page === 1}>&lt;</Button>
-              {Array.from({ length: totalPages || 1 }, (_, i) => i + 1)
-                .filter(p => {
-                  if (totalPages <= 3) return true;
-                  if (page === 1) return p <= 3;
-                  if (page === totalPages) return p >= totalPages - 2;
-                  return Math.abs(p - page) <= 1;
-                })
-                .map(p => (
-                  <Button key={p} variant={p === page ? "primary" : "outline"} size="sm" onClick={() => setPage(p)}>{p}</Button>
-                ))}
-              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(p + 1, totalPages || 1))} disabled={page === totalPages || totalPages === 0}>&gt;</Button>
-            </div>
-          </div>
+      <div className="flex justify-between items-center mt-4">
+        <span className="text-sm ">Page {page} of {totalPages || 1}</span>
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(p - 1, 1))} disabled={page === 1}>&lt;</Button>
+          {Array.from({ length: totalPages || 1 }, (_, i) => i + 1)
+            .filter(p => {
+              if (totalPages <= 3) return true;
+              if (page === 1) return p <= 3;
+              if (page === totalPages) return p >= totalPages - 2;
+              return Math.abs(p - page) <= 1;
+            })
+            .map(p => (
+              <Button key={p} variant={p === page ? "primary" : "outline"} size="sm" onClick={() => setPage(p)}>{p}</Button>
+            ))}
+          <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(p + 1, totalPages || 1))} disabled={page === totalPages || totalPages === 0}>&gt;</Button>
+        </div>
+      </div>
 
       {/* Edit Modal */}
       {editingJob && (
@@ -258,6 +275,31 @@ const totalPages = Math.ceil(total / pageSize);
           </div>
         </div>
       )}
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteJobId} onOpenChange={() => setDeleteJobId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the job from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteJobId) {
+                  deleteJob(deleteJobId);
+                  setDeleteJobId(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
