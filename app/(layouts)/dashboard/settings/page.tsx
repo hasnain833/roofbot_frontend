@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Alert,AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -15,17 +15,17 @@ export default function SmsTemplatePage() {
   const [loading, setLoading] = useState(false);
 
   const DEFAULTS = {
-    lead: 'Hello {first_name}, thank you for showing interest in {service_type} services!',
-    appointment: 'Hi {first_name}, your appointment for {service_type} is scheduled on {date_time}. See you soon!',
-    followup: 'Hi {first_name},We are following up on your interest in our services.',
-    reminder: 'Reminder: Your appointment is in 24 hours on {date_time}. Title: {appointment_title}.',
+    lead: 'Hello {first_name}, thank you for showing interest in {service_type} services at {company_name}!',
+    appointment: 'Hi {first_name}, your appointment for {service_type} with {company_name} is scheduled on {date_time}. See you soon!',
+    followup: 'Hi {first_name}, {company_name} here following up on your interest in our services.',
+    reminder: 'Reminder: Your appointment with {company_name} is in 24 hours on {date_time}. Title: {appointment_title}.',
   };
 
   const PLACEHOLDERS = {
-    lead: '{first_name}, {service_type}',
-    appointment: '{first_name}, {service_type}, {date_time}',
-    followup: '{first_name},',
-    reminder: '{first_name}, {date_time}, {appointment_title}',
+    lead: '{first_name}, {service_type}, {company_name}, {company_domain}, {company_phone_number}',
+    appointment: '{first_name}, {service_type}, {date_time}, {company_name}, {company_domain}, {company_phone_number}',
+    followup: '{first_name}, {company_name}, {company_domain}, {company_phone_number}',
+    reminder: '{first_name}, {date_time}, {appointment_title}, {company_name}, {company_domain}, {company_phone_number}',
   };
 
   useEffect(() => {
@@ -69,11 +69,11 @@ export default function SmsTemplatePage() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-          {success && (
-        <Alert className="bg-green-100 border-green-400 text-green-700 mb-3">
-          <AlertTitle>{success}</AlertTitle>
-        </Alert>
-      )}
+        {success && (
+          <Alert className="bg-green-100 border-green-400 text-green-700 mb-3">
+            <AlertTitle>{success}</AlertTitle>
+          </Alert>
+        )}
 
         <div className="flex gap-2">
           <Button
@@ -103,9 +103,9 @@ export default function SmsTemplatePage() {
         </div>
         <p className="text-sm text-muted-foreground">
           {type === 'lead' ? 'Sent on new lead creation.' :
-           type === 'appointment' ? 'Sent on appointment creation.' :
-           type === 'followup' ? 'Sent for lead follow-ups.' :
-           'Sent as appointment reminders (e.g., 24 hours before).'}
+            type === 'appointment' ? 'Sent on appointment creation.' :
+              type === 'followup' ? 'Sent for lead follow-ups.' :
+                'Sent as appointment reminders (e.g., 24 hours before).'}
         </p>
 
         <Label>Default Template</Label>

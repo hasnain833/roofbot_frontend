@@ -214,7 +214,7 @@ export default function IntegrationPage() {
           {googleIntegration?.key ? (
             <div className="flex flex-col gap-3">
               <p className="text-green-600 font-medium">
-                Connected to Google Calendar
+                Connected to Google
               </p>
               <div className="flex flex-col gap-3">
                 <Button disabled className="bg-green-500 text-white">
@@ -527,20 +527,31 @@ export default function IntegrationPage() {
 
         {/* SendGrid Email */}
         <div className="p-4 border rounded-lg shadow-sm bg-background">
-          <h2 className="font-semibold mb-3">SendGrid (Email)</h2>
+          <div className="flex justify-between items-start mb-3">
+            <h2 className="font-semibold">SendGrid</h2>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <div className="p-1 text-xs">
+                  From:{' '}
+                  <strong>
+                    {integrations?.find((i) => i.provider === 'sendgrid')
+                      ?.from_email || 'Not set'}
+                  </strong>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
 
           {sendgridConnected ? (
             <div className="flex flex-col gap-3">
               <p className="text-green-600 font-medium">
                 Connected to SendGrid
               </p>
-              <div className="text-sm text-gray-600">
-                From:{' '}
-                <strong>
-                  {integrations?.find((i) => i.provider === 'sendgrid')
-                    ?.from_email || 'Not set'}
-                </strong>
-              </div>
               <div className="flex flex-col gap-3">
                 <Button disabled className="bg-green-500 text-white">
                   Connected
@@ -665,7 +676,7 @@ export default function IntegrationPage() {
           {outlookConnected ? (
             <div className="flex flex-col gap-3">
               <p className="text-green-600 font-medium">
-                Connected to Outlook Calendar
+                Connected to Outlook
               </p>
 
               <Button disabled className="bg-green-500 text-white">

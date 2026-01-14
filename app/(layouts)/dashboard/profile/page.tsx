@@ -25,6 +25,16 @@ import {
   getProfileSchema,
   ProfileSchemaType,
 } from '@/app/(layouts)/forms/profile-schema';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function ProfilePage() {
   const { token, user } = useAuth();
@@ -41,6 +51,7 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState(user?.tenant?.phone ?? '');
   const [saving, setSaving] = useState(false);
   const [phoneSuccess, setPhoneSuccess] = useState<string | null>(null);
+  const [confirmType, setConfirmType] = useState<'cancel' | 'upgrade' | 'resume' | null>(null);
 
   const isSuperAdmin = user?.email === 'griffinb@invictusconnect.com';
   const isTenantOwner = user?.is_owner === true;
@@ -161,8 +172,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleCancel = async () => {
-    if (!confirm('Cancel subscription?')) return;
+  const executeCancel = async () => {
     setIsProcessingCancel(true);
     try {
       const res = await fetch(
@@ -183,8 +193,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleUpgrade = async () => {
-    if (!confirm('Upgrade to Pro? You will be charged.')) return;
+  const executeUpgrade = async () => {
     setIsProcessingUpgrade(true);
     try {
       const res = await fetch(
@@ -215,8 +224,7 @@ export default function ProfilePage() {
 
   // RE-SUBSCRIBE
   // RESUME SUBSCRIPTION (grace period only)
-  const handleResume = async () => {
-    if (!confirm('Resume your subscription?')) return;
+  const executeResume = async () => {
     setIsProcessingSubscribe(true);
 
     try {
@@ -242,68 +250,68 @@ export default function ProfilePage() {
       setIsProcessingSubscribe(false);
     }
   };
-  
- const saveTenantPhone = async () => {
-  setSaving(true);
-  setPhoneSuccess(null); 
-  setError(null);        
 
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/tenant/phone`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ phone }),
+  const saveTenantPhone = async () => {
+    setSaving(true);
+    setPhoneSuccess(null);
+    setError(null);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/tenant/phone`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ phone }),
+        }
+      );
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Failed to save phone number');
       }
-    );
 
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.message || 'Failed to save phone number');
+      setPhoneSuccess('Phone number saved successfully!');
+
+      setTimeout(() => {
+        setPhoneSuccess(null);
+      }, 3000);
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to save phone number');
+    } finally {
+      setSaving(false);
     }
+  };
 
-    setPhoneSuccess('Phone number saved successfully!');
-    
-    setTimeout(() => {
-      setPhoneSuccess(null);
-    }, 3000);
+  const fetchTenantPhone = async () => {
+    if (!token) return;
 
-  } catch (err: any) {
-    setError(err.message || 'Failed to save phone number');
-  } finally {
-    setSaving(false);
-  }
-};
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/tenant/phone`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
 
-const fetchTenantPhone = async () => {
-  if (!token) return;
+        }
+      );
 
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/tenant/phone`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        
+      if (res.ok) {
+        const data = await res.json();
+        if (data.phone) {
+          setPhone(data.phone);
+        }
       }
-    );
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.phone) {
-        setPhone(data.phone);
-      }
+    } catch (err) {
+      console.error('Failed to fetch tenant phone');
     }
-  } catch (err) {
-    console.error('Failed to fetch tenant phone');
-  }
-};
-useEffect(() => {
-  fetchTenantPhone();
-}, [token]);
+  };
+  useEffect(() => {
+    fetchTenantPhone();
+  }, [token]);
   const formatDate = (date: string | null) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString();
@@ -330,11 +338,11 @@ useEffect(() => {
         </Alert>
       )}
       {phoneSuccess && (
-  <Alert className="mb-4 border-green-400 bg-green-50 text-green-700">
-    <Check className="h-4 w-4" />
-    <AlertTitle>{phoneSuccess}</AlertTitle>
-  </Alert>
-)}
+        <Alert className="mb-4 border-green-400 bg-green-50 text-green-700">
+          <Check className="h-4 w-4" />
+          <AlertTitle>{phoneSuccess}</AlertTitle>
+        </Alert>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* PROFILE */}
@@ -445,33 +453,33 @@ useEffect(() => {
             </form>
           </Form>
         </div>
-<div className="space-y-2">
-  <label className="text-sm font-medium">
-    Business Phone (Receive Incoming Calls)
-  </label>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Business Phone (Receive Incoming Calls)
+          </label>
 
-  <input
-    type="tel"
-    placeholder="eg. +923001234567"
-    value={phone}
-    onChange={(e) => setPhone(e.target.value)}
-    className="w-full border rounded px-3 py-2 pt-2.5"
-  />
+          <input
+            type="tel"
+            placeholder="eg. +923001234567"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full border rounded px-3 py-2 pt-2.5"
+          />
 
-  <p className="text-xs text-muted-foreground">
-    Calls to your Twilio number will ring on this number(its your mobile number not the twilio one).make sure to add your number in international format.
-  </p>
-  <Button
-  onClick={saveTenantPhone}
-  disabled={saving}
-  className="mt-2"
->
-  {saving ? (
-    <LoaderCircleIcon className="animate-spin mr-2" />
-  ) : null}
-  Save Phone Number
-</Button>
-</div>
+          <p className="text-xs text-muted-foreground">
+            Calls to your Twilio number will ring on this number(its your mobile number not the twilio one).make sure to add your number in international format.
+          </p>
+          <Button
+            onClick={saveTenantPhone}
+            disabled={saving}
+            className="mt-2"
+          >
+            {saving ? (
+              <LoaderCircleIcon className="animate-spin mr-2" />
+            ) : null}
+            Save Phone Number
+          </Button>
+        </div>
 
         {/* SUBSCRIPTION – ONLY FOR TENANT OWNER */}
         {isTenantOwner && (
@@ -521,7 +529,7 @@ useEffect(() => {
                   {subscription.plan_id == 1 &&
                     subscription.stripe_status !== 'canceled' && (
                       <Button
-                        onClick={handleUpgrade}
+                        onClick={() => setConfirmType('upgrade')}
                         disabled={isProcessingUpgrade}
                       >
                         {isProcessingUpgrade ? (
@@ -533,7 +541,7 @@ useEffect(() => {
 
                   {subscription.stripe_status !== 'canceled' && (
                     <Button
-                      onClick={handleCancel}
+                      onClick={() => setConfirmType('cancel')}
                       variant="destructive"
                       disabled={isProcessingCancel}
                     >
@@ -548,7 +556,7 @@ useEffect(() => {
                     <>
                       {isInGracePeriod ? (
                         <Button
-                          onClick={handleResume}
+                          onClick={() => setConfirmType('resume')}
                           disabled={isProcessingSubscribe}
                         >
                           {isProcessingSubscribe ? (
@@ -556,15 +564,15 @@ useEffect(() => {
                           ) : null}
                           Resume Subscription
                         </Button>
-                      ) : 
-                      (
-                        <Button
-                          onClick={() => router.push('/checkout')}
-                          disabled={isProcessingSubscribe}
-                        >
-                          Subscribe Again
-                        </Button>
-                      )
+                      ) :
+                        (
+                          <Button
+                            onClick={() => router.push('/checkout')}
+                            disabled={isProcessingSubscribe}
+                          >
+                            Subscribe Again
+                          </Button>
+                        )
                       }
                     </>
                   )}
@@ -576,6 +584,44 @@ useEffect(() => {
           </div>
         )}
       </div>
+
+      <AlertDialog
+        open={!!confirmType}
+        onOpenChange={(open) => !open && setConfirmType(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmType === 'cancel'
+                ? 'Cancel Subscription?'
+                : confirmType === 'upgrade'
+                  ? 'Upgrade to Pro?'
+                  : 'Resume Subscription?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmType === 'cancel'
+                ? 'Are you sure you want to cancel your subscription? You will still have access until the end of your current period.'
+                : confirmType === 'upgrade'
+                  ? 'Are you sure you want to upgrade to Pro? You will be charged based on the new plan.'
+                  : 'Are you sure you want to resume your subscription?'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, Keep it</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmType === 'cancel') executeCancel();
+                if (confirmType === 'upgrade') executeUpgrade();
+                if (confirmType === 'resume') executeResume();
+                setConfirmType(null);
+              }}
+              className={confirmType === 'cancel' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

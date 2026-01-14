@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
 
 export default function CompanyPage() {
   const [company, setCompany] = useState("");
@@ -17,7 +16,6 @@ export default function CompanyPage() {
   const [loading, setLoading] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
 
   // Fetch company + chatbot data on page load
   useEffect(() => {
@@ -31,14 +29,14 @@ export default function CompanyPage() {
         if (data?.data) {
           setCompany(data.data.company || "");
           setDomain(data.data.domain || "");
-          setChatbot(data.data.chatbot ||"");
+          setChatbot(data.data.chatbot || "");
         }
       } catch (err) {
         console.error("Error fetching company:", err);
       }
     };
     fetchCompany();
-  },  [token]);
+  }, [token]);
 
   const handleUpdate = async () => {
     if (!token) return setError("Token missing. Please re-login.");

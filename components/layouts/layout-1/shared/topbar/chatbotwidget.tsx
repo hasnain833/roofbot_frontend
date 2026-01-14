@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,16 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
   const [ipAddress, setIpAddress] = useState("");
   const [copied, setCopied] = useState(false);
   const [iframeUrl, setIframeUrl] = useState("");
+  const [displayCompanyName, setDisplayCompanyName] = useState(companyName || "");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(iframeUrl);
@@ -68,11 +78,14 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
         setAgentId(data.agent_id);
         setSessionId(data.session_id);
         setIpAddress(data.ip_address);
+        if (data.company) {
+          setDisplayCompanyName(data.company);
+        }
 
         setMessages([
           {
             sender: "bot",
-            text: `Hi 👋 I'm ${data.company || companyName || "your"} assistant. How can I help you today?`,
+            text: `Hi 👋 I'm ${data.company || displayCompanyName || "your"} assistant. How can I help you today?`,
           },
         ]);
       } catch (err) {
@@ -139,16 +152,25 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
 
   return (
     <Card className="shadow-lg border rounded-2xl overflow-hidden">
-      <CardHeader className="bg-black text-white text-center font-semibold py-3">
-        {companyName ? `${companyName} Chatbot` : "Company Chatbot"}
+      <CardHeader className="bg-black text-white text-center font-semibold py-3 relative">
+        {displayCompanyName ? `${displayCompanyName} Chatbot` : "Company Chatbot"}
       </CardHeader>
 
-      <CardContent className="flex flex-col h-[500px] justify-between p-0">
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+      <CardContent className="flex flex-col h-[500px] justify-between p-0 relative">
+        {/* Initialization Overlay */}
+        {(!agentId || !sessionId) && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-[2px] transition-all duration-500">
+            <div className="p-4 rounded-xl animate-in fade-in zoom-in duration-500">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </div>
+        )}
+
+        <div className={`flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 ${(!agentId || !sessionId) ? 'opacity-50' : ''}`}>
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`px-4 py-2 rounded-2xl text-sm shadow ${msg.sender === "user"
+                className={`px-4 py-2 rounded-2xl text-sm shadow whitespace-pre-wrap ${msg.sender === "user"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-800"
                   }`}
@@ -157,19 +179,34 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
               </div>
             </div>
           ))}
+
+          {loading && (
+            <div className="flex justify-start">
+              <div className="bg-gray-200 px-4 py-3 rounded-2xl shadow flex items-center space-x-1">
+                <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"></div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         <div className="flex items-center border-t p-3 bg-white">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={(!agentId || !sessionId) ? "Waiting for assistant..." : "Type a message..."}
             className="flex-1 mr-2"
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            disabled={loading}
+            disabled={loading || !agentId || !sessionId}
           />
-          <Button onClick={sendMessage} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
-            {loading ? "..." : "Send"}
+          <Button
+            onClick={sendMessage}
+            disabled={loading || !agentId || !sessionId}
+            className="bg-blue-600 hover:bg-blue-700 text-white min-w-[70px]"
+          >
+            Send
           </Button>
         </div>
 

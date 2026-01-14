@@ -61,7 +61,8 @@ export default function LeadsPage() {
     zip: '',
     country: '',
     status: 'New',
-    service_type: '',
+    service_type_id: '',
+    service_type_name: '',
   });
 
   // ✅ For AI Summary
@@ -220,8 +221,8 @@ export default function LeadsPage() {
       zip: lead.zip || '',
       country: lead.country || '',
       status: lead.status || 'New',
-      service_type_id: '',
-      service_type_name: lead.service_type || '',
+      service_type_id: lead.service_type_id || '',
+      service_type_name: lead.service_type_name || '',
     });
 
     setView('form');
@@ -244,7 +245,7 @@ export default function LeadsPage() {
       zip: '',
       country: '',
       status: 'New',
-      service_type: '',
+      service_type_id: '',
       service_type_name: '',
     });
     setSummary('');

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Alert,AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,24 +17,24 @@ export default function EmailTemplatePage() {
   const [loading, setLoading] = useState(false);
 
   const DEFAULT_SUBJECTS = {
-    lead:'Thank You',
+    lead: 'Thank You',
     appointment: 'Your Appointment is Confirmed',
     followup: 'Follow-up',
     reminder: 'Appointment Reminder: 24 Hours Away',
   };
 
   const DEFAULT_MESSAGES = {
-    lead:'Hi {first_name},\n\nThank You For Showing interest in our Services.',
-    appointment: 'Hi {first_name},\n\nYour appointment for {service_type} is scheduled on {date_time}. See you soon!',
-    followup: 'Hi {first_name}, we are following up on your interest in our services.',
-    reminder: 'Hi {first_name},\n\nThis is a friendly reminder that your appointment is in 24 hours on {date_time}. Title: {appointment_title}.',
+    lead: 'Hi {first_name},\n\nThank you for your interest in {service_type} services at {company_name}.\n\nVisit us: {company_domain}',
+    appointment: 'Hi {first_name},\n\nYour appointment for {service_type} with {company_name} is scheduled on {date_time}. See you soon!\n\nContact: {company_phone_number}',
+    followup: 'Hi {first_name},\n\n{company_name} here. We are following up on your interest in our services.\n\nBest,\n{company_name}\n{company_domain}',
+    reminder: 'Hi {first_name},\n\nThis is a friendly reminder that your appointment with {company_name} is in 24 hours on {date_time}.\nTitle: {appointment_title}.\n\nSee you soon!',
   };
 
   const PLACEHOLDERS = {
-    lead:'{first_name},{service_type}',
-    appointment: '{first_name}, {service_type}, {date_time}',
-    followup: '{first_name}',
-    reminder: '{first_name}, {date_time}, {appointment_title}',
+    lead: '{first_name},{service_type}, {company_name}, {company_domain}, {company_phone_number}',
+    appointment: '{first_name}, {service_type}, {date_time}, {company_name}, {company_domain}, {company_phone_number}',
+    followup: '{first_name}, {company_name}, {company_domain}, {company_phone_number}',
+    reminder: '{first_name}, {date_time}, {appointment_title}, {company_name}, {company_domain}, {company_phone_number}',
   };
 
   useEffect(() => {
@@ -82,11 +82,11 @@ export default function EmailTemplatePage() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-          {success && (
-        <Alert className="bg-green-100 border-green-400 text-green-700 mb-3">
-          <AlertTitle>{success}</AlertTitle>
-        </Alert>
-      )}
+        {success && (
+          <Alert className="bg-green-100 border-green-400 text-green-700 mb-3">
+            <AlertTitle>{success}</AlertTitle>
+          </Alert>
+        )}
 
         <div className="flex gap-2">
           <Button
@@ -116,9 +116,9 @@ export default function EmailTemplatePage() {
         </div>
         <p className="text-sm text-muted-foreground">
           {
-           type === 'appointment' ? 'Sent on appointment creation.' :
-           type === 'followup' ? 'Sent for lead follow-ups.' :
-           'Sent as appointment reminders (e.g., 24 hours before).'}
+            type === 'appointment' ? 'Sent on appointment creation.' :
+              type === 'followup' ? 'Sent for lead follow-ups.' :
+                'Sent as appointment reminders (e.g., 24 hours before).'}
         </p>
 
         <Label>Default Subject</Label>

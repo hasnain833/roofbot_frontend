@@ -9,10 +9,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export default function ChatbotTemplateSettings() {
   type Question = {
-  key: string;        // internal key (damage_type)
-  question: string;  // what bot asks
-  required: boolean;
-};
+    key: string;        // internal key (damage_type)
+    question: string;  // what bot asks
+    required: boolean;
+  };
 
   const { token } = useAuth();
   const [company, setCompany] = useState(''); // <- store company name
@@ -60,9 +60,9 @@ export default function ChatbotTemplateSettings() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-             chatbot_prompt: chatbotPrompt,
-             chatbot_questions: questions,
- }),
+            chatbot_prompt: chatbotPrompt,
+            chatbot_questions: questions,
+          }),
         },
       );
       const data = await res.json();
@@ -142,10 +142,10 @@ export default function ChatbotTemplateSettings() {
             className="w-full border p-3 rounded-md h-64"
             value={chatbotPrompt}
             onChange={(e) => setChatbotPrompt(e.target.value)}
-            placeholder="Add your custom chatbot prompt here...}"
+            placeholder="Add your custom chatbot prompt here..."
           />{' '}
           <div className="flex gap-3">
-           
+
             <Button
               onClick={handleDelete}
               disabled={loading || !chatbotPrompt}
@@ -158,104 +158,104 @@ export default function ChatbotTemplateSettings() {
         </CardContent>{' '}
       </Card>{' '}
       <Card className="shadow-lg border rounded-xl mt-6">
-  <CardHeader>
-    <h2 className="font-semibold text-lg">Custom Questions</h2>
-    <p className="text-sm text-gray-500">
-      These questions will be asked after lead details are collected(Before Appointment Booking).
-    </p>
-  </CardHeader>
+        <CardHeader>
+          <h2 className="font-semibold text-lg">Custom Questions</h2>
+          <p className="text-sm text-gray-500">
+            These questions will be asked after lead details are collected(Before Appointment Booking).
+          </p>
+        </CardHeader>
 
- <CardContent className="space-y-6">
-  {questions.map((q, idx) => (
-    <div
-      key={idx}
-      className="border rounded-lg p-4 space-y-4 "
-    >
-      {/* Internal Key */}
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">
-          Internal Key
-        </label>
-        <input
-          className="border rounded-md p-2"
-          placeholder="e.g. damage_type"
-          value={q.key}
-          onChange={(e) => {
-            const copy = [...questions];
-            copy[idx].key = e.target.value;
-            setQuestions(copy);
-          }}
-        />
-      </div>
-
-      {/* Question Text */}
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">
-          Question to Ask
-        </label>
-        <input
-          className="border rounded-md p-2"
-          placeholder="What type of damage do you have?"
-          value={q.question}
-          onChange={(e) => {
-            const copy = [...questions];
-            copy[idx].question = e.target.value;
-            setQuestions(copy);
-          }}
-        />
-      </div>
-
-      {/* Required Checkbox */}
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          checked={q.required}
-          onChange={(e) => {
-            const copy = [...questions];
-            copy[idx].required = e.target.checked;
-            setQuestions(copy);
-          }}
-        />
-        <span className="text-sm text-gray-700">
-          This question is required
-        </span>
-      </div>
-
-      {/* Remove Button */}
-      <div className="flex justify-end">
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() =>
-            setQuestions(questions.filter((_, i) => i !== idx))
-          }
-        >
-          Remove Question
-        </Button>
-      </div>
-    </div>
-  ))}
-
-  <Button
-    variant="outline"
-    onClick={() =>
-      setQuestions([...questions, { key: '', question: '', required: true }])
-    }
-  >
-    + Add Question
-  </Button>
-</CardContent>
-
-</Card>
- {' '}
-            <Button
-              onClick={handleUpdate}
-              disabled={loading}
-              className=" hover:bg-gray-800  flex items-center mt-8"
+        <CardContent className="space-y-6">
+          {questions.map((q, idx) => (
+            <div
+              key={idx}
+              className="border rounded-lg p-4 space-y-4 "
             >
-              {' '}
-              {loading ? 'Saving...' : 'Save'}{' '}
-            </Button>{' '}
+              {/* Internal Key */}
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Internal Key
+                </label>
+                <input
+                  className="border rounded-md p-2"
+                  placeholder="e.g. damage_type"
+                  value={q.key}
+                  onChange={(e) => {
+                    const copy = [...questions];
+                    copy[idx].key = e.target.value;
+                    setQuestions(copy);
+                  }}
+                />
+              </div>
+
+              {/* Question Text */}
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Question to Ask
+                </label>
+                <input
+                  className="border rounded-md p-2"
+                  placeholder="What type of damage do you have?"
+                  value={q.question}
+                  onChange={(e) => {
+                    const copy = [...questions];
+                    copy[idx].question = e.target.value;
+                    setQuestions(copy);
+                  }}
+                />
+              </div>
+
+              {/* Required Checkbox */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={q.required}
+                  onChange={(e) => {
+                    const copy = [...questions];
+                    copy[idx].required = e.target.checked;
+                    setQuestions(copy);
+                  }}
+                />
+                <span className="text-sm text-gray-700">
+                  This question is required
+                </span>
+              </div>
+
+              {/* Remove Button */}
+              <div className="flex justify-end">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() =>
+                    setQuestions(questions.filter((_, i) => i !== idx))
+                  }
+                >
+                  Remove Question
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          <Button
+            variant="outline"
+            onClick={() =>
+              setQuestions([...questions, { key: '', question: '', required: true }])
+            }
+          >
+            + Add Question
+          </Button>
+        </CardContent>
+
+      </Card>
+      {' '}
+      <Button
+        onClick={handleUpdate}
+        disabled={loading}
+        className=" hover:bg-gray-800  flex items-center mt-8"
+      >
+        {' '}
+        {loading ? 'Saving...' : 'Save'}{' '}
+      </Button>{' '}
     </div>
   );
 }
