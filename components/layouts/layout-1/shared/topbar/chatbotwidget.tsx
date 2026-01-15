@@ -129,8 +129,8 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
         body: JSON.stringify({
           agent_id: agentId,
           session_id: sessionId,
-          ip_address: ipAddress,
           message: input,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
       });
 
