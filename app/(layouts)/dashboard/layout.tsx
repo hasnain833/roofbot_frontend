@@ -23,13 +23,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   if (isLoading) return <ScreenLoader />;
 
   return (
-    <AuthProvider>
-      <DashboardLayout>
-        <MainWrapper>
-          {children}
-        </MainWrapper>
-      </DashboardLayout>
-    </AuthProvider>
+    <DashboardLayout>
+      <MainWrapper>
+        {children}
+      </MainWrapper>
+    </DashboardLayout>
   );
 }
 
@@ -58,14 +56,14 @@ function MainWrapper({ children }: { children: ReactNode }) {
     }
 
     fetchSubscription();
-  }, [user, token]);
+  }, [user?.id, token]); // Using user.id for stability
 
   const formattedTrialEnd = trialEndDate
     ? new Date(trialEndDate).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      })
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
     : null;
 
   return (

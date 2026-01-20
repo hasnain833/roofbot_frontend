@@ -13,11 +13,11 @@ type User = {
   last_name: string;
   email: string;
   role: string;
-  plan_id: number;                    
-  subscription_status: string;        
-  current_period_end: string | null; 
-  is_owner: boolean;                   
-  has_valid_subscription: boolean; 
+  plan_id: number;
+  subscription_status: string;
+  current_period_end: string | null;
+  is_owner: boolean;
+  has_valid_subscription: boolean;
   last_plan_id: number;
   stripe_id: string | null;
   tenant: Tenant;
@@ -28,7 +28,7 @@ type AuthContextType = {
   token: string | null;
   login: (token: string, user: User) => void;
   logout: () => void;
-  refreshUser: () => Promise<void>; 
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,23 +58,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     Cookies.remove("auth_token");
     Cookies.remove("auth_user");
-    window.location.href = "/signin"; 
+    window.location.href = "/signin";
   };
 
   const refreshUser = async () => {
     if (!token) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`, {  
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to refresh user");
+
+      if (res.status === 401) {
+        console.warn("Session expired, logging out...");
+        logout();
+        return;
+      }
+
+      if (!res.ok) throw new Error(`Failed to refresh user: ${res.status}`);
+
       const updatedUser = await res.json();
       setUser(updatedUser);
       Cookies.set("auth_user", JSON.stringify(updatedUser), { expires: 7, secure: true, sameSite: "Lax" });
     } catch (err) {
       console.error("Refresh user failed", err);
-      logout();  
+      // Don't logout on network errors/etc, only on 401
     }
   };
 

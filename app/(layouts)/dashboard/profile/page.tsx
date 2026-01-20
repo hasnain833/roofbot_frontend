@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function ProfilePage() {
-  const { token, user } = useAuth();
+  const { token, user, refreshUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isProcessingProfile, setIsProcessingProfile] = useState(false);
@@ -48,7 +48,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<any>(null);
-  const [phone, setPhone] = useState(user?.tenant?.phone ?? '');
+  const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
   const [phoneSuccess, setPhoneSuccess] = useState<string | null>(null);
   const [confirmType, setConfirmType] = useState<'cancel' | 'upgrade' | 'resume' | null>(null);
@@ -82,7 +82,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     fetchSubscription();
-  }, [token, isSuperAdmin, isSubUser, isTenantOwner]);
+  }, [token, isTenantOwner]); // Removed derived booleans that don't change independently
 
   useEffect(() => {
     const subscribed = searchParams.get('subscribed');
@@ -102,11 +102,21 @@ export default function ProfilePage() {
 
   const profileForm = useForm<ProfileSchemaType>({
     resolver: zodResolver(getProfileSchema()),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+    },
   });
   const passwordForm = useForm<PasswordChangeSchemaType>({
     resolver: zodResolver(getPasswordChangeSchema()),
+    defaultValues: {
+      password: '',
+      passwordConfirmation: '',
+    },
   });
 
+  // Sync form with user data when it loads
   useEffect(() => {
     if (user) {
       profileForm.reset({
@@ -115,7 +125,12 @@ export default function ProfilePage() {
         email: user.email || '',
       });
     }
-  }, [user, profileForm]);
+  }, [user?.id, profileForm]); // Using user.id to avoid unnecessary resets if object reference changes but ID is same
+
+  // Initial data sync on mount
+  useEffect(() => {
+    refreshUser();
+  }, []); // Run only once on mount
 
   // PROFILE UPDATE
   const onSubmitProfile = async (values: ProfileSchemaType) => {
@@ -138,6 +153,7 @@ export default function ProfilePage() {
       );
 
       if (!res.ok) throw new Error('Failed');
+      await refreshUser();
       setSuccess('Profile updated');
     } catch (err: any) {
       setError(err.message);
@@ -310,8 +326,14 @@ export default function ProfilePage() {
     }
   };
   useEffect(() => {
-    fetchTenantPhone();
-  }, [token]);
+    if (user?.tenant?.phone) {
+      setPhone(user.tenant.phone);
+    }
+    // Only fetch if we don't already have it or if it might have changed
+    if (token) {
+      fetchTenantPhone();
+    }
+  }, [token, user?.id]); // Using user.id for stability
   const formatDate = (date: string | null) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString();
@@ -386,7 +408,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input type="email" {...field} disabled />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -95,7 +95,7 @@ export default function LeadsPage() {
 
   useEffect(() => {
     fetchLeads();
-  }, [token, page, pageSize, sorting, search]);
+  }, [token, page, pageSize, JSON.stringify(sorting), search]); // Use stringified sorting to detect deep changes
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
