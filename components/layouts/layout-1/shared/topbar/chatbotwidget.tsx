@@ -25,6 +25,7 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
   const [copied, setCopied] = useState(false);
   const [iframeUrl, setIframeUrl] = useState("");
   const [displayCompanyName, setDisplayCompanyName] = useState(companyName || "");
+  const [error, setError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -66,7 +67,8 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
   useEffect(() => {
     const fetchSession = async () => {
       // Don't fetch if we're in the dashboard and token isn't ready yet
-      if (!isIframe && !token) return;
+      // Also don't fetch if we are in iframe mode but haven't extracted a token yet
+      if ((!isIframe && !token) || (isIframe && !tokenFromUrl)) return;
 
       try {
         const res = await fetch(fetchSessionUrl, {
@@ -75,10 +77,17 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
 
         if (!res.ok) {
           console.error("Session info fetch failed:", res.status);
+          setError("Unable to connect to service.");
           return;
         }
 
         const data = await res.json();
+
+        if (!data.agent_id || !data.session_id) {
+          setError("Chatbot is currently unavailable.");
+          return;
+        }
+
         setAgentId(data.agent_id);
         setSessionId(data.session_id);
         setIpAddress(data.ip_address);
@@ -97,6 +106,7 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
         ]);
       } catch (err) {
         console.error("Failed to fetch session info:", err);
+        setError("Network error. Please try again later.");
       }
     };
 
@@ -166,10 +176,17 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
       <CardContent className="flex flex-col h-[500px] justify-between p-0 relative">
         {/* Initialization Overlay */}
         {(!agentId || !sessionId) && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-[2px] transition-all duration-500">
-            <div className="p-4 rounded-xl animate-in fade-in zoom-in duration-500">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-[2px] transition-all duration-500">
+            {error ? (
+              <div className="text-center p-6">
+                <div className="mb-2 text-red-500 text-3xl">⚠️</div>
+                <p className="text-gray-600 font-medium">{error}</p>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl animate-in fade-in zoom-in duration-500">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
           </div>
         )}
 

@@ -1,11 +1,10 @@
-"use client";
-
+import { use } from "react";
 import ChatbotWidget from "@/components/layouts/layout-1/shared/topbar/chatbotwidget";
 
-interface Params { params: { botToken: string } }
+interface Params { params: Promise<{ botToken: string }> }
 
 export default function PublicChatbot({ params }: Params) {
-  const { botToken } = params;
+  const { botToken } = use(params);
 
   return (
     <div className="container max-w-md mx-auto py-5">
