@@ -1,14 +1,16 @@
 "use client";
+
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import ChatbotWidget from "@/components/layouts/layout-1/shared/topbar/chatbotwidget";
 
-export default function ChatbotPage() {
+function ChatbotContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const companyName = searchParams.get("company") || "Company";
-  const botToken = searchParams.get("token") || ""; 
+  const botToken = searchParams.get("token") || "";
 
   return (
     <div className="container max-w-md mx-auto py-10">
@@ -18,8 +20,15 @@ export default function ChatbotPage() {
       >
         ←
       </Button>
-      <ChatbotWidget companyName={companyName} botToken={botToken} 
-    isPublic={false} />
+      <ChatbotWidget companyName={companyName} botToken={botToken} isPublic={false} />
     </div>
+  );
+}
+
+export default function ChatbotPage() {
+  return (
+    <Suspense fallback={<div className="container max-w-md mx-auto py-10">Loading chatbot...</div>}>
+      <ChatbotContent />
+    </Suspense>
   );
 }

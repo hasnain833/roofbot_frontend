@@ -35,25 +35,29 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
     scrollToBottom();
   }, [messages, loading]);
 
+  const [internalBotToken, setInternalBotToken] = useState(botToken || "");
+
   const handleCopy = () => {
+    if (!iframeUrl) return;
     navigator.clipboard.writeText(iframeUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIframeUrl(`${window.location.origin}/yourchatbot/${botToken}`);
+    const finalToken = internalBotToken || botToken;
+    if (typeof window !== "undefined" && finalToken) {
+      setIframeUrl(`${window.location.origin}/yourchatbot/${finalToken}`);
     }
-  }, [botToken]);
+  }, [botToken, internalBotToken]);
 
   const isIframe =
     typeof window !== "undefined" &&
     window.location.pathname.startsWith("/yourchatbot/");
 
   const tokenFromUrl = isIframe
-    ? window.location.pathname.split("/yourchatbot/")[1]
-    : botToken;
+    ? window.location.pathname.split("/").pop()
+    : (botToken || internalBotToken);
 
   const fetchSessionUrl = isIframe
     ? `${process.env.NEXT_PUBLIC_API_URL}/api/chatbot/session-info-iframe?token=${tokenFromUrl}`
@@ -78,6 +82,9 @@ export default function ChatbotWidget({ companyName, botToken }: Props) {
         setAgentId(data.agent_id);
         setSessionId(data.session_id);
         setIpAddress(data.ip_address);
+        if (data.bot_token) {
+          setInternalBotToken(data.bot_token);
+        }
         if (data.company) {
           setDisplayCompanyName(data.company);
         }
